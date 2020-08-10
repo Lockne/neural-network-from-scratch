@@ -3,7 +3,9 @@ module Main where
 import qualified Numeric.LinearAlgebra as LA
 
 type Size = [Int]
+
 type BiasSet = LA.Vector Double
+
 type WeightSet = [LA.Matrix Double]
 
 data Network =
@@ -34,16 +36,29 @@ initWeights = undefined
 
 -- | Given the outputs of a previous layer, the biases of every node in the present layer,
 --   and the weights for every node in the present layer, compute the z value for the present layer.
-zLayer :: LA.Matrix Double -> LA.Matrix Double -> LA.Matrix Double -> LA.Matrix Double
-zLayer input weights biases =  (weights <> input) + biases
+zLayer ::
+     LA.Matrix Double
+  -> LA.Matrix Double
+  -> LA.Matrix Double
+  -> LA.Matrix Double
+zLayer input weights biases = (weights <> input) + biases
 
 sigmoid :: LA.Matrix Double -> LA.Matrix Double
-sigmoid zlayer = 1 / (1 + LA.expm (-1*zlayer))
+sigmoid zlayer = 1 / (1 + LA.expm (-1 * zlayer))
 
-feedforward :: LA.Matrix Double -> LA.Matrix Double -> LA.Matrix Double -> LA.Matrix Double
+feedforward ::
+     LA.Matrix Double
+  -> LA.Matrix Double
+  -> LA.Matrix Double
+  -> LA.Matrix Double
 feedforward = undefined
 
-
+costFunc :: LA.Matrix Double -> LA.Matrix Double -> Double
+costFunc expectedOutput actualOutput =
+  (LA.sumElements (expectedOutput - actualOutput) ^ 2) / 2 * len actualOutput
+  where
+    len :: LA.Matrix Double -> Double
+    len mat = (fromIntegral $ LA.cols mat) * (fromIntegral $ LA.rows mat)
 
 main :: IO ()
 main = return ()

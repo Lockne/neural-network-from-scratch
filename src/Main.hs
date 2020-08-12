@@ -9,9 +9,14 @@ module Main where
 --      3) For a particular layer z, the bias matrix for that layer should be a
 --         (1) x (number of nodes in current layer) matrix.
 import qualified Numeric.LinearAlgebra as LA
+import qualified Numeric.LinearAlgebra.Data as D
 import Data.List
 
 type Size = [Int]
+type Activations = LA.Matrix Double
+type ZLayerInputs = LA.Matrix Double
+type LayerBiases = LA.Matrix Double
+type LayerWeights = LA.Matrix Double
 
 data Network =
   Network
@@ -43,19 +48,17 @@ initWeights = undefined
 --   and the weights for every node in the present layer, compute the z value for the present layer.
 zLayer ::
      LA.Matrix Double
-  -> LA.Matrix Double
-  -> LA.Matrix Double
+  -> LayerWeights
+  -> LayerBiases
   -> LA.Matrix Double
 zLayer input weights biases = (input <> weights) + biases
 
 -- | Having computed the z values to each node in the layer, the sigmoid function computes the
 --   activation vector.
 
-expm :: LA.Matrix Double -> LA.Matrix Double
-expm = LA.fromLists . (fmap . fmap) exp . LA.toLists
-
-sigmoid :: LA.Matrix Double -> (LA.Matrix Double, LA.Matrix Double)
+sigmoid :: LA.Matrix Double -> (ZLayerInputs, Activations)
 sigmoid zlayer = (zlayer, 1 / (1 + expm (-1 * zlayer)))
+                 where expm = D.cmap exp
 
 -- -- | The feedforward algorithm is just data origami (fold left).
 -- feedforward ::
@@ -74,9 +77,9 @@ sigmoid zlayer = (zlayer, 1 / (1 + expm (-1 * zlayer)))
 
 feedforward' ::
      LA.Matrix Double
-  -> [LA.Matrix Double]
-  -> [LA.Matrix Double]
-  -> [(LA.Matrix Double, LA.Matrix Double)]
+  -> [LayerWeights]
+  -> [LayerBiases]
+  -> [(ZLayerInputs, Activations)]
 feedforward' inputs [] _ = []
 feedforward' inputs (w:ws) (b:bs) =
   feedforward' (snd $ sigmoid (zLayer inputs w b)) ws bs ++ [sigmoid (zLayer inputs w b)]
@@ -90,14 +93,13 @@ cost networkOutput expectedOutput =
   where
     len = fromIntegral . (\(x, y) -> x * y) . LA.size
 
-
 -- | Given input and expected output, calculate the total output error i.e.
 --   the sum of errors of each node.
 outputError ::
      LA.Matrix Double
   -> LA.Matrix Double
-  -> [LA.Matrix Double]
-  -> [LA.Matrix Double]
+  -> [LayerWeights]
+  -> [LayerBiases]
   -> Double
 outputError input expOutput weights biases =
   LA.sumElements $ cost ((snd . head) $ feedforward' input weights biases) expOutput
@@ -120,9 +122,6 @@ test = do
   let w = [w1] ++ [w2]
   print $ feedforward' i w b
   print $  outputError i o w b
-
-
-
 
 main :: IO ()
 main = return ()

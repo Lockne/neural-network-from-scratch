@@ -1,5 +1,5 @@
 import qualified Numeric.LinearAlgebra as LA
-import qualified Numeric.LinearAlgebra.Data as D
+import qualified Numeric.LinearAlgebra.Data as D (tr,  (><))
 
 type X_Train = LA.Matrix Double
 type Y_Train = LA.Matrix Double
@@ -9,8 +9,11 @@ type Output = LA.Matrix Double
 type LearningRate = Double
 -- | y = w * x + b for a single training example
 
+ones :: Int -> Int -> LA.Matrix Double
+ones x y = (x D.>< y) [1,1 ..]
+
 output' :: W -> X_Train -> B -> Output
-output' w xTrain b = w `LA.scale` xTrain + b `LA.scale` (fst (LA.size xTrain) D.>< 1) [1,1 ..]
+output' w xTrain b = w `LA.scale` xTrain + b `LA.scale` ones (fst (LA.size xTrain)) 1
 
 cost :: Output -> Y_Train -> Double
 cost output yTrain = LA.sumElements $ (1/2) * (output - yTrain) ^ 2
@@ -32,9 +35,9 @@ test = do
   yTrain <- LA.rand 3 1
   let w = 0
   let b = 0
-  let alpha = 0.001
-  let loop i w' b' | i > 1000 = return ()
-      loop i w' b' | i <= 1000 = do
+  let alpha = 0.00001
+  let loop i w' b' | i > 600 = return ()
+      loop i w' b' | i <= 600 = do
          let c = cost (output' w' xTrain b') yTrain
          putStrLn $ concat ["Cost: ", show c]
          let w'' = updateW' w' xTrain b' alpha
